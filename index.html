@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIRASH Sarcopenia Score Calculator</title>
+<style>
+:root{--ink:#111;--muted:#5f6368;--line:#d8d8d8;--panel:#f7f7f7;--warn:#fff7e6}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:white;color:var(--ink);line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding:28px 20px 50px}
+h1{font-size:30px;margin:0 0 6px}
+.subtitle{color:var(--muted);margin-bottom:22px}
+.notice{border:1px solid var(--line);background:var(--panel);padding:14px 16px;margin:14px 0 24px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.field{border-bottom:1px solid #eee;padding-bottom:10px}
+label{display:block;font-weight:700;margin-bottom:6px}
+.unit{font-weight:400;color:var(--muted);font-size:13px}
+input,select{width:100%;padding:10px 11px;border:1px solid #aaa;border-radius:4px;font-size:16px;background:#fff}
+input:focus,select:focus{outline:2px solid #222;outline-offset:1px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}
+button{padding:11px 18px;border:1px solid #111;background:#111;color:white;border-radius:4px;font-weight:700;cursor:pointer}
+button.secondary{background:white;color:#111}
+.result{border:2px solid #111;padding:18px;margin-top:10px;display:none}
+.big{font-size:34px;font-weight:700}
+.small{font-size:13px;color:var(--muted)}
+.error{color:#9b1c1c;font-weight:700;margin-top:10px}
+.warning{background:var(--warn);border:1px solid #e2c27a;padding:12px;margin-top:14px}
+details{margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+code{font-family:Consolas,monospace;font-size:13px}
+.footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}
+.badge{display:inline-block;border:1px solid #111;padding:2px 7px;font-size:12px;font-weight:700;margin-left:6px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:20px 14px}.big{font-size:29px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MIRASH Sarcopenia Score Calculator <span class="badge">v1.0.0</span></h1>
+  <div class="subtitle">Metabolic–Inflammatory–Renal–Age–Sex–Hematologic score</div>
+
+  <div class="notice">
+    <strong>Intended use.</strong> Screening / risk enrichment for contemporaneous sarcopenia in adults aged ≥60 years.
+    This calculator does <strong>not</strong> replace formal assessment of muscle strength, muscle quantity, or physical performance.
+    No universal diagnostic cutoff has been established.
+  </div>
+
+  <form id="mirashForm" novalidate>
+    <div class="grid">
+      <div class="field"><label>Age <span class="unit">(years)</span></label><input id="age" type="number" min="60" max="120" step="1" required></div>
+      <div class="field"><label>Sex</label><select id="sex" required><option value="">Select</option><option value="0">Male</option><option value="1">Female</option></select></div>
+      <div class="field"><label>Hemoglobin <span class="unit">(g/dL)</span></label><input id="hb" type="number" min="1" max="30" step="0.1" required></div>
+      <div class="field"><label>Platelet count <span class="unit">(10⁹/L)</span></label><input id="plt" type="number" min="1" max="2000" step="1" required></div>
+      <div class="field"><label>Creatinine <span class="unit">(mg/dL; ln applied automatically)</span></label><input id="cr" type="number" min="0.01" max="20" step="0.01" required></div>
+      <div class="field"><label>Total cholesterol <span class="unit">(mg/dL)</span></label><input id="tc" type="number" min="1" max="800" step="1" required></div>
+      <div class="field"><label>HDL cholesterol <span class="unit">(mg/dL)</span></label><input id="hdl" type="number" min="1" max="250" step="1" required></div>
+      <div class="field"><label>Triglycerides <span class="unit">(mg/dL; ln applied automatically)</span></label><input id="tg" type="number" min="0.01" max="5000" step="1" required></div>
+      <div class="field"><label>Uric acid <span class="unit">(mg/dL)</span></label><input id="ua" type="number" min="0.01" max="30" step="0.1" required></div>
+      <div class="field"><label>C-reactive protein (CRP) <span class="unit">(mg/L; ln applied automatically)</span></label><input id="crp" type="number" min="0.001" max="1000" step="0.1" required></div>
+      <div class="field"><label>Glucose <span class="unit">(mg/dL; ln applied automatically)</span></label><input id="glu" type="number" min="1" max="1500" step="1" required></div>
+      <div class="field"><label>HbA1c <span class="unit">(%; ln applied automatically)</span></label><input id="hba1c" type="number" min="0.1" max="30" step="0.1" required></div>
+    </div>
+
+    <div class="actions">
+      <button type="submit">Calculate MIRASH probability</button>
+      <button type="button" class="secondary" id="exampleBtn">Load example</button>
+      <button type="button" class="secondary" id="resetBtn">Reset</button>
+    </div>
+    <div id="error" class="error" aria-live="polite"></div>
+  </form>
+
+  <div id="result" class="result" aria-live="polite">
+    <div class="small">Estimated probability of sarcopenia</div>
+    <div class="big" id="probability">—</div>
+    <div>Linear predictor (LP): <strong id="lp">—</strong></div>
+    <div class="warning">This probability is a model estimate, not a diagnosis. The study did not define a universal treatment or diagnostic threshold. Individuals identified as higher risk should undergo standard sarcopenia assessment when clinically appropriate.</div>
+  </div>
+
+  <details>
+    <summary><strong>Model equation and units</strong></summary>
+    <p>All logarithms are natural logarithms. Enter raw laboratory values; the calculator performs logarithmic transformations automatically.</p>
+    <code>LP = -3.560992184381921 + 0.1277818820080819 × Age - 0.18995170510177203 × Female - 0.1470669067614975 × Hemoglobin + 0.00244916790473318 × Platelets - 0.37898821247535686 × ln(Creatinine) - 0.00584560049501891 × Total cholesterol + 0.03380228550218713 × HDL-C - 0.3078444088236499 × ln(Triglycerides) - 0.13470542496673812 × Uric acid - 0.10759903465824627 × ln(CRP) - 0.4947046847487329 × ln(Glucose) - 0.924042456215138 × ln(HbA1c)</code>
+    <p>Probability = 1 / [1 + exp(-LP)]. Female=1; male=0.</p>
+  </details>
+
+  <details>
+    <summary><strong>Privacy and versioning</strong></summary>
+    <p>All calculations are performed locally in your browser. This static calculator does not transmit, store, or upload entered values.</p>
+    <p>Calculator version: 1.0.0. Formula corresponds to the fixed MIRASH model evaluated in CHARLS 2015 and NHANES 1999–2002.</p>
+  </details>
+
+  <div class="footer">Research implementation aid. Please cite the MIRASH development and validation manuscript when available. Before clinical deployment, local calibration and prospective impact evaluation are recommended.</div>
+</div>
+
+<script>
+const B={intercept:-3.560992184381921,age:0.1277818820080819,female:-0.18995170510177203,hb:-0.1470669067614975,plt:0.00244916790473318,lncr:-0.37898821247535686,tc:-0.00584560049501891,hdl:0.03380228550218713,lntg:-0.3078444088236499,ua:-0.13470542496673812,lncrp:-0.10759903465824627,lnglu:-0.4947046847487329,lnhba1c:-0.924042456215138};
+function getNum(id){return Number(document.getElementById(id).value)}
+function calculate(v){const lp=B.intercept+B.age*v.age+B.female*v.female+B.hb*v.hb+B.plt*v.plt+B.lncr*Math.log(v.cr)+B.tc*v.tc+B.hdl*v.hdl+B.lntg*Math.log(v.tg)+B.ua*v.ua+B.lncrp*Math.log(v.crp)+B.lnglu*Math.log(v.glu)+B.lnhba1c*Math.log(v.hba1c);return{lp,p:1/(1+Math.exp(-lp))}}
+function values(){return{age:getNum("age"),female:getNum("sex"),hb:getNum("hb"),plt:getNum("plt"),cr:getNum("cr"),tc:getNum("tc"),hdl:getNum("hdl"),tg:getNum("tg"),ua:getNum("ua"),crp:getNum("crp"),glu:getNum("glu"),hba1c:getNum("hba1c")}}
+function validate(v){if(Object.values(v).some(x=>!Number.isFinite(x)))return"Please complete all fields.";if(v.age<60)return"MIRASH was developed for adults aged 60 years or older.";for(const key of["cr","tg","crp","glu","hba1c"]){if(v[key]<=0)return"Creatinine, triglycerides, CRP, glucose, and HbA1c must be >0 because natural logarithms are used."}return""}
+document.getElementById("mirashForm").addEventListener("submit",function(e){e.preventDefault();const v=values(),msg=validate(v);document.getElementById("error").textContent=msg;if(msg){document.getElementById("result").style.display="none";return}const r=calculate(v);document.getElementById("lp").textContent=r.lp.toFixed(6);document.getElementById("probability").textContent=(100*r.p).toFixed(1)+"%";document.getElementById("result").style.display="block"});
+document.getElementById("exampleBtn").addEventListener("click",function(){const ex={age:70,sex:0,hb:13.5,plt:220,cr:1.0,tc:190,hdl:50,tg:130,ua:5.5,crp:2.0,glu:100,hba1c:5.8};for(const[k,v]of Object.entries(ex))document.getElementById(k).value=v;document.getElementById("error").textContent="";document.getElementById("result").style.display="none"});
+document.getElementById("resetBtn").addEventListener("click",function(){document.getElementById("mirashForm").reset();document.getElementById("error").textContent="";document.getElementById("result").style.display="none"});
+(function selfTest(){const v={age:70,female:0,hb:13.5,plt:220,cr:1.0,tc:190,hdl:50,tg:130,ua:5.5,crp:2.0,glu:100,hba1c:5.8};const r=calculate(v),expectedLP=-1.6998362480358085,expectedP=0.1544866532412719;if(Math.abs(r.lp-expectedLP)>1e-12||Math.abs(r.p-expectedP)>1e-12){document.body.innerHTML="<div style='padding:30px;font-family:Arial'><h1>Calculator self-test failed</h1><p>Please do not use this version.</p></div>"}})();
+</script>
+</body>
+</html>

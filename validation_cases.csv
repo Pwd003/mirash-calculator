@@ -1,0 +1,4 @@
+case,age,sex_female,hemoglobin,platelets,creatinine,total_cholesterol,hdl_cholesterol,triglycerides,uric_acid,crp,glucose,hba1c,expected_lp,expected_probability
+Validation case 1,70,0,13.5,220,1.0,190,50,130,5.5,2.0,100,5.8,-1.6998362480358085,0.1544866532412719
+Validation case 2,75,1,11.5,180,0.9,170,60,100,4.5,1.0,95,5.5,-0.19534065652211985,0.4513195331718992
+Validation case 3,65,0,15.0,250,1.1,210,45,180,6.5,3.0,110,6.2,-3.1952044527826393,0.03934658707651717

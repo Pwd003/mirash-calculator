@@ -1,0 +1,45 @@
+{
+  "model_name": "MIRASH Sarcopenia Score",
+  "version": "1.0.0",
+  "target_population": "Adults aged 60 years or older",
+  "intended_use": "Screening / risk enrichment for contemporaneous sarcopenia; not a stand-alone diagnosis",
+  "formula": {
+    "linear_predictor": "LP = intercept + sum(beta_j * x_j), with natural log transformation for creatinine, triglycerides, CRP, glucose, and HbA1c",
+    "probability": "p = 1 / (1 + exp(-LP))"
+  },
+  "coefficients": {
+    "intercept": -3.560992184381921,
+    "age": 0.1277818820080819,
+    "sex_female": -0.18995170510177203,
+    "hemoglobin": -0.1470669067614975,
+    "platelets": 0.00244916790473318,
+    "ln_creatinine": -0.37898821247535686,
+    "total_cholesterol": -0.00584560049501891,
+    "hdl_cholesterol": 0.03380228550218713,
+    "ln_triglycerides": -0.3078444088236499,
+    "uric_acid": -0.13470542496673812,
+    "ln_crp": -0.10759903465824627,
+    "ln_glucose": -0.4947046847487329,
+    "ln_hba1c": -0.924042456215138
+  },
+  "units": {
+    "age": "years",
+    "sex_female": "female=1, male=0",
+    "hemoglobin": "g/dL",
+    "platelets": "10^9/L",
+    "creatinine": "mg/dL",
+    "total_cholesterol": "mg/dL",
+    "hdl_cholesterol": "mg/dL",
+    "triglycerides": "mg/dL",
+    "uric_acid": "mg/dL",
+    "crp": "mg/L",
+    "glucose": "mg/dL",
+    "hba1c": "%"
+  },
+  "notes": [
+    "All logarithms are natural logarithms.",
+    "Do not log-transform values before entering them into the calculator.",
+    "No universal diagnostic cutoff is proposed.",
+    "The calculator implements the fixed equation and does not refit or recalibrate the model."
+  ]
+}

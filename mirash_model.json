@@ -1,11 +1,15 @@
 {
-  "model_name": "MIRASH Sarcopenia Score",
-  "version": "1.0.0",
+  "model_name": "MIRASH Sarcopenia Calculator",
+  "version": "2.0.0",
+  "model_status": "Frozen; coefficients unchanged from the development model",
   "target_population": "Adults aged 60 years or older",
-  "intended_use": "Screening / risk enrichment for contemporaneous sarcopenia; not a stand-alone diagnosis",
+  "original_target": "Contemporaneous sarcopenia in the frozen CHARLS development framework",
+  "intended_use": "Research screening and risk enrichment; not a stand-alone diagnosis",
+  "interpretation_boundary": "The logistic probability is calibrated only for the original frozen sarcopenia target. Other post-freeze muscle/sarcopenia phenotypes were evaluated as construct-spectrum outcomes and do not have phenotype-specific calibrated probabilities from this equation.",
   "formula": {
-    "linear_predictor": "LP = intercept + sum(beta_j * x_j), with natural log transformation for creatinine, triglycerides, CRP, glucose, and HbA1c",
-    "probability": "p = 1 / (1 + exp(-LP))"
+    "linear_predictor": "LP = intercept + sum(beta_j * x_j)",
+    "probability": "p = 1 / (1 + exp(-LP))",
+    "important_note": "Legacy internal z_ variable prefixes do NOT indicate z-score standardization. No mean/SD or median/IQR standardization is applied before the equation."
   },
   "coefficients": {
     "intercept": -3.560992184381921,
@@ -22,24 +26,44 @@
     "ln_glucose": -0.4947046847487329,
     "ln_hba1c": -0.924042456215138
   },
-  "units": {
-    "age": "years",
-    "sex_female": "female=1, male=0",
-    "hemoglobin": "g/dL",
-    "platelets": "10^9/L",
-    "creatinine": "mg/dL",
-    "total_cholesterol": "mg/dL",
-    "hdl_cholesterol": "mg/dL",
-    "triglycerides": "mg/dL",
-    "uric_acid": "mg/dL",
-    "crp": "mg/L",
-    "glucose": "mg/dL",
-    "hba1c": "%"
+  "inputs": {
+    "age": {"unit": "years", "transform": "raw", "coding": "age >= 60"},
+    "sex_female": {"unit": "binary", "transform": "none", "coding": "male=0; female=1"},
+    "hemoglobin": {"unit": "g/dL", "transform": "raw"},
+    "platelets": {"unit": "10^9/L", "transform": "raw"},
+    "creatinine": {"unit": "mg/dL", "transform": "natural logarithm"},
+    "total_cholesterol": {"unit": "mg/dL", "transform": "raw"},
+    "hdl_cholesterol": {"unit": "mg/dL", "transform": "raw"},
+    "triglycerides": {"unit": "mg/dL", "transform": "natural logarithm"},
+    "uric_acid": {"unit": "mg/dL", "transform": "raw"},
+    "crp": {"unit": "mg/L", "transform": "natural logarithm"},
+    "glucose": {"unit": "mg/dL", "transform": "natural logarithm"},
+    "hba1c": {"unit": "%", "transform": "natural logarithm"}
+  },
+  "development_8iqr_qc_original_scale": {
+    "hemoglobin": {"lower": -5.100004196166992, "upper": 33.300004959106445},
+    "platelets": {"lower": -542, "upper": 946},
+    "creatinine": {"lower": 0.07169785438380083, "upper": 8.726635112804427},
+    "total_cholesterol": {"lower": -195.23309326171875, "upper": 577.9671020507812},
+    "hdl_cholesterol": {"lower": -107.4748191833496, "upper": 207.99081802368164},
+    "triglycerides": {"lower": 0.40101563930511464, "upper": 26280.96093750003},
+    "uric_acid": {"lower": -8.601601600646973, "upper": 17.498881340026855},
+    "crp": {"lower": 0.000018281669487752583, "upper": 73603.7769123384},
+    "glucose": {"lower": 22.813632276027775, "upper": 466.2939835878214},
+    "hba1c": {"lower": 2.063813835628041, "upper": 13.101955975660411}
+  },
+  "qc_note": "The 8-IQR values are frozen development-domain QC/applicability boundaries, not clinical reference intervals and not scaling constants.",
+  "frozen_performance_summary": {
+    "CHARLS_2011_nested_OOF": {"n": 3517, "events": 663, "auc": 0.788496},
+    "CHARLS_2015_temporal": {"n": 5871, "events": 1028, "auc": 0.804193, "brier": 0.115, "calibration_intercept": -0.025103, "calibration_slope": 1.101396},
+    "CHARLS_2015_ultrastrict_participant_independent": {"n": 3053, "events": 380, "auc": 0.80248},
+    "NHANES_1999_2002_confirmed_sarcopenia": {"n": 1982, "weighted_prevalence": 0.182, "auc": 0.771946}
   },
   "notes": [
-    "All logarithms are natural logarithms.",
-    "Do not log-transform values before entering them into the calculator.",
-    "No universal diagnostic cutoff is proposed.",
-    "The calculator implements the fixed equation and does not refit or recalibrate the model."
+    "Enter raw laboratory values in the specified units; logarithmic transformations are applied internally.",
+    "Creatinine, triglycerides, CRP, glucose and HbA1c must be greater than zero.",
+    "No universal diagnostic or treatment cutoff is proposed.",
+    "The calculator implements the frozen equation only and does not refit or recalibrate the model.",
+    "The score does not replace direct assessment of muscle strength, muscle quantity or physical performance."
   ]
 }

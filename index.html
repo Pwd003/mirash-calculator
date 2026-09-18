@@ -50,8 +50,8 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 <body>
 <main>
 
-<h1>MIRASH Muscle Health Research Calculator <span class="version">v4.0.0</span></h1>
-<p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a parsimonious research score based on age, sex, and five routine laboratory measures. It was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently replicated at the construct level in NHANES 1999–2002.</p>
+<h1>MIRASH Muscle Health Research Calculator <span class="version">v4.1.0</span></h1>
+<p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a parsimonious research score based on age, sex, and five routine laboratory measures. It was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently externally validated in NHANES 1999–2002; measurement-different outcomes are interpreted as construct-level external validation.</p>
 
 <div class="notice">
 <strong>Research-use notice.</strong> MIRASH is intended for research screening and risk enrichment. It is not a diagnostic device and does not replace direct assessment of muscle strength, muscle quantity, physical performance, or clinician judgment. No diagnostic or treatment cutoff is proposed.
@@ -121,7 +121,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     <span class="tag">Primary MIRASH output</span>
     <h3>Sarcopenia</h3>
     <div class="value" id="sarc"></div>
-    <p class="small">Research probability from the compact MIRASH core. No diagnostic threshold is recommended by this calculator.</p>
+    <p class="small">Research probability from the MIRASH core. No diagnostic threshold is recommended by this calculator.</p>
   </div>
 
   <div class="card">
@@ -182,12 +182,12 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="evidence-item"><span class="metric">NHANES confirmed sarcopenia:</span> AUC 0.768</div>
   <div class="evidence-item"><span class="metric">NHANES DXA ASMI construct:</span> standardized β −0.443</div>
 </div>
-<p class="small">These metrics describe cohort-level model performance and construct replication. They do not establish a diagnostic cutoff for an individual patient.</p>
+<p class="small">These metrics describe cohort-level model performance, external validation, and construct evaluation. They do not establish a diagnostic cutoff for an individual patient.</p>
 
 <h2>Model specification</h2>
 
 <details>
-<summary>Compact MIRASH core equation</summary>
+<summary>MIRASH core equation</summary>
 <p><code>LP = -5.487398507960009 + 0.12326834468595758×age - 0.1899312810882511×sex_female - 0.1753188540347149×hemoglobin + 0.02671598208556792×HDL - 0.5530624730258957×ln(triglycerides) - 0.1779895176025112×uric_acid - 0.11104092546219071×ln(CRP)</code></p>
 <p class="small">Female sex = 1 and male sex = 0. Units: age in years; hemoglobin in g/dL; HDL-C, triglycerides, and uric acid in mg/dL; CRP in mg/L. Natural logarithms are applied only to triglycerides and CRP. No z-score standardization is used.</p>
 </details>
@@ -205,11 +205,11 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <details>
 <summary>Scope and limitations</summary>
-<p class="small">The current MIRASH model was evaluated in adults aged 60 years or older. CHARLS and NHANES do not provide identical measurements for every phenotype; NHANES strength evidence is proxy-based and DXA ASMI serves as an independent muscle-mass construct replication. The calculator therefore supports research interpretation rather than clinical diagnosis.</p>
+<p class="small">The current MIRASH model was evaluated in adults aged 60 years or older. CHARLS and NHANES do not provide identical measurements for every phenotype; NHANES strength evidence is proxy-based and DXA ASMI provides an independent external muscle-mass construct validation. The calculator therefore supports research interpretation rather than clinical diagnosis.</p>
 </details>
 
 <footer>
-All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 4.0.0 uses the final compact MIRASH specification dated 18 September 2026. No diagnostic or treatment cutoff is optimized or recommended. <span id="selftest">Internal self-test pending.</span>
+All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 4.0.0 uses the final MIRASH specification dated 18 September 2026. No diagnostic or treatment cutoff is optimized or recommended. <span id="selftest">Internal self-test pending.</span>
 </footer>
 
 </main>
@@ -394,7 +394,7 @@ async function copyResults(){
   if(!window.__last) return;
   const r = window.__last;
   const text = [
-    "MIRASH muscle health research calculator - compact model v4.0.0",
+    "MIRASH muscle health research calculator - model v4.1.0",
     "MIRASH LP: " + r.lp.toFixed(6),
     "Sarcopenia probability (primary): " + pct(r.sarc),
     "Low estimated muscle mass probability: " + pct(r.lowMass),

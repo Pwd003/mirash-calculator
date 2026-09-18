@@ -3,265 +3,419 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MIRASH Seven-Output Research Calculator</title>
+<title>MIRASH Muscle Health Research Calculator</title>
+<meta name="description" content="MIRASH research calculator for sarcopenia and related muscle-health phenotypes using age, sex, and five routine laboratory measures.">
 <style>
-:root{--fg:#111;--muted:#5a5a5a;--line:#d8d8d8;--soft:#f5f5f5;--warn:#efefef}
+:root{--fg:#111;--muted:#5d5d5d;--line:#d8d8d8;--soft:#f5f5f5;--soft2:#fafafa}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--fg);background:#fff;line-height:1.45}
-main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
-h1{font-size:30px;margin:0 0 6px}
-h2{font-size:21px;margin:28px 0 12px;border-bottom:1px solid var(--line);padding-bottom:7px}
-h3{font-size:17px;margin:0 0 5px}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--fg);background:#fff;line-height:1.48}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 50px}
+h1{font-size:30px;line-height:1.18;margin:0 0 7px}
+h2{font-size:21px;margin:30px 0 13px;border-bottom:1px solid var(--line);padding-bottom:7px}
+h3{font-size:17px;margin:0 0 6px}
 p{margin:7px 0}
-.lead{color:var(--muted);max-width:900px}
+.lead{color:var(--muted);max-width:930px;font-size:15px}
+.version{display:inline-block;font-size:12px;font-weight:700;border:1px solid #111;padding:3px 7px;vertical-align:middle;margin-left:6px}
 .notice{border:1px solid #111;padding:12px 14px;margin:18px 0;background:#fff}
+.note-soft{border:1px solid var(--line);padding:12px 14px;margin:12px 0;background:var(--soft2)}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .field{border:1px solid var(--line);padding:11px;background:#fff}
 label{font-weight:700;display:block;font-size:14px;margin-bottom:6px}
 .unit{font-weight:400;color:var(--muted)}
 input,select{width:100%;padding:9px 10px;border:1px solid #888;background:#fff;color:#111;font-size:15px}
-button{appearance:none;border:1px solid #111;background:#111;color:#fff;padding:10px 16px;font-size:15px;cursor:pointer;margin-right:8px}
+button{appearance:none;border:1px solid #111;background:#111;color:#fff;padding:10px 16px;font-size:15px;cursor:pointer;margin-right:8px;margin-bottom:8px}
 button.secondary{background:#fff;color:#111}
 .actions{margin:18px 0}
-.error{display:none;border:1px solid #111;padding:10px;margin:10px 0;background:var(--warn)}
-.qc{display:none;border:1px dashed #777;padding:10px;margin:10px 0;color:#333}
+.error{display:none;border:1px solid #111;padding:10px;margin:10px 0;background:#efefef}
 .results{display:none}
-.scorebox{border:2px solid #111;padding:14px;margin:12px 0;background:#fff}
+.scorebox{border:1px solid #111;padding:14px;margin:12px 0;background:#fff}
 .scoreline{font-family:Consolas,monospace;font-size:17px}
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .card{border:1px solid #999;padding:14px;background:#fff}
-.card.primary{border:2px solid #111}
-.value{font-size:25px;font-weight:700;margin:3px 0 6px}
-.tag{display:inline-block;border:1px solid #777;padding:2px 6px;font-size:12px;margin-bottom:6px;background:var(--soft)}
+.card.primary{border:2px solid #111;grid-column:1/-1}
+.value{font-size:27px;font-weight:700;margin:3px 0 6px}
+.tag{display:inline-block;border:1px solid #777;padding:2px 6px;font-size:12px;margin-bottom:7px;background:var(--soft)}
 .small{font-size:13px;color:var(--muted)}
+.metric{font-weight:700}
 details{border:1px solid var(--line);padding:10px 12px;margin:10px 0}
 summary{cursor:pointer;font-weight:700}
 code{font-family:Consolas,monospace;font-size:12px;word-break:break-word}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.evidence-item{border-left:3px solid #111;padding:7px 10px;background:var(--soft2)}
 footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-@media(max-width:800px){.grid,.cards{grid-template-columns:1fr}}
+@media(max-width:800px){.grid,.cards,.evidence-grid{grid-template-columns:1fr}.card.primary{grid-column:auto}}
 @media print{button,.actions{display:none!important} main{max-width:none;padding:0}}
 </style>
 </head>
 <body>
 <main>
-<h1>MIRASH Seven-Output Research Calculator <span style="font-size:13px;border:1px solid #111;padding:3px 7px;vertical-align:middle">v3.0.0</span></h1>
-<p class="lead">A frozen routine-laboratory MIRASH core score with seven prespecified outcome-specific mapping heads. The calculator uses the original CHARLS 2011-frozen equations by default.</p>
+
+<h1>MIRASH Muscle Health Research Calculator <span class="version">v4.0.0</span></h1>
+<p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a parsimonious research score based on age, sex, and five routine laboratory measures. It was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently replicated at the construct level in NHANES 1999–2002.</p>
 
 <div class="notice">
-<strong>Default model governance.</strong> All seven outputs use the original CHARLS 2011-frozen outcome-specific heads. CHARLS 2015 recalibration results are secondary model-updating sensitivities and are intentionally not used as default equations.
+<strong>Research-use notice.</strong> MIRASH is intended for research screening and risk enrichment. It is not a diagnostic device and does not replace direct assessment of muscle strength, muscle quantity, physical performance, or clinician judgment. No diagnostic or treatment cutoff is proposed.
 </div>
 
-<div class="notice">
-<strong>Research-use notice.</strong> This tool is not a diagnostic device and does not replace direct assessment of muscle strength, muscle mass, physical performance, or clinician judgment. No diagnostic or treatment cutoff is proposed by this calculator.
+<div class="note-soft">
+<strong>How to interpret the seven outputs.</strong> The sarcopenia probability is the primary MIRASH output. Low muscle mass, severe sarcopenia, and low muscle strength are secondary research probabilities; possible sarcopenia is exploratory. Handgrip strength and SMI are continuous research estimates rather than probabilities and should not be treated as substitutes for direct measurement.
 </div>
 
 <h2>Inputs</h2>
 <div class="grid">
-  <div class="field"><label>Age <span class="unit">(years)</span></label><input id="age" type="number" step="0.1" min="60" required></div>
-  <div class="field"><label>Sex</label><select id="sex"><option value="">Select</option><option value="0">Male</option><option value="1">Female</option></select></div>
-  <div class="field"><label>Hemoglobin <span class="unit">(g/dL)</span></label><input id="hemoglobin" type="number" step="0.01" min="0" required></div>
-  <div class="field"><label>Platelet count <span class="unit">(10^9/L)</span></label><input id="platelets" type="number" step="0.1" min="0" required></div>
-  <div class="field"><label>Creatinine <span class="unit">(mg/dL)</span></label><input id="creatinine" type="number" step="0.001" min="0.001" required></div>
-  <div class="field"><label>Total cholesterol <span class="unit">(mg/dL)</span></label><input id="total_chol" type="number" step="0.1" min="0" required></div>
-  <div class="field"><label>HDL cholesterol <span class="unit">(mg/dL)</span></label><input id="hdl" type="number" step="0.1" min="0" required></div>
-  <div class="field"><label>Triglycerides <span class="unit">(mg/dL)</span></label><input id="triglycerides" type="number" step="0.1" min="0.001" required></div>
-  <div class="field"><label>Uric acid <span class="unit">(mg/dL)</span></label><input id="uric_acid" type="number" step="0.01" min="0" required></div>
-  <div class="field"><label>C-reactive protein <span class="unit">(mg/L)</span></label><input id="crp" type="number" step="0.001" min="0.001" required></div>
-  <div class="field"><label>Glucose <span class="unit">(mg/dL)</span></label><input id="glucose" type="number" step="0.1" min="0.001" required></div>
-  <div class="field"><label>HbA1c <span class="unit">(%)</span></label><input id="hba1c" type="number" step="0.01" min="0.001" required></div>
+  <div class="field">
+    <label>Age <span class="unit">(years)</span></label>
+    <input id="age" type="number" step="0.1" min="60" required>
+  </div>
+  <div class="field">
+    <label>Sex</label>
+    <select id="sex">
+      <option value="">Select</option>
+      <option value="0">Male</option>
+      <option value="1">Female</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Hemoglobin <span class="unit">(g/dL)</span></label>
+    <input id="hemoglobin" type="number" step="0.01" min="0.01" required>
+  </div>
+  <div class="field">
+    <label>HDL cholesterol <span class="unit">(mg/dL)</span></label>
+    <input id="hdl" type="number" step="0.1" min="0.01" required>
+  </div>
+  <div class="field">
+    <label>Triglycerides <span class="unit">(mg/dL)</span></label>
+    <input id="triglycerides" type="number" step="0.1" min="0.001" required>
+  </div>
+  <div class="field">
+    <label>Uric acid <span class="unit">(mg/dL)</span></label>
+    <input id="uric_acid" type="number" step="0.01" min="0.01" required>
+  </div>
+  <div class="field">
+    <label>C-reactive protein <span class="unit">(mg/L)</span></label>
+    <input id="crp" type="number" step="0.001" min="0.001" required>
+  </div>
 </div>
 
+<p class="small">Enter values in the units shown above. The calculator does not automatically convert mmol/L, µmol/L, or other units. Triglycerides and CRP must be greater than 0 because the model uses their natural logarithms.</p>
+
 <div class="actions">
-<button onclick="calculate()">Calculate</button>
-<button class="secondary" onclick="resetForm()">Reset</button>
-<button class="secondary" onclick="loadExample()">Load example</button>
+  <button onclick="calculate()">Calculate</button>
+  <button class="secondary" onclick="resetForm()">Reset</button>
+  <button class="secondary" onclick="loadExample()">Load example</button>
 </div>
+
 <div id="err" class="error"></div>
-<div id="qc" class="qc"></div>
 
 <section id="results" class="results">
 <h2>Results</h2>
+
 <div class="scorebox">
-<h3>Frozen MIRASH core linear predictor</h3>
-<div id="lp" class="scoreline"></div>
-<p class="small">The legacy analytic prefix “z_” is not z-score standardization. Raw/log transformations are applied exactly as specified below.</p>
+  <h3>MIRASH linear predictor</h3>
+  <div id="lp" class="scoreline"></div>
+  <p class="small">The linear predictor is the common MIRASH core used by all seven outcome-specific mappings below.</p>
 </div>
 
 <div class="cards">
-  <div class="card">
-    <span class="tag">Auxiliary continuous estimate</span>
-    <h3>Handgrip strength</h3><div class="value" id="grip"></div>
-    <p class="small">Research estimate only. Do not interpret as a clinically accurate substitute for directly measured handgrip strength.</p>
-  </div>
-  <div class="card">
-    <span class="tag">Auxiliary muscle-mass construct</span>
-    <h3>SMI</h3><div class="value" id="smi"></div>
-    <p class="small">Do not equate this estimate with DXA- or BIA-measured muscle mass.</p>
-  </div>
-  <div class="card">
-    <span class="tag">Secondary research probability</span>
-    <h3>Low muscle strength</h3><div class="value" id="low_strength"></div>
-    <p class="small">Moderate temporal discrimination with calibration drift. Not a stand-alone diagnostic probability.</p>
-  </div>
-  <div class="card">
-    <span class="tag">Secondary research probability</span>
-    <h3>Low estimated muscle mass</h3><div class="value" id="low_mass"></div>
-    <p class="small">Good temporal discrimination/calibration in CHARLS; external evidence is construct-level rather than identical-definition validation.</p>
-  </div>
-  <div class="card">
-    <span class="tag">Exploratory probability only</span>
-    <h3>Possible sarcopenia</h3><div class="value" id="possible"></div>
-    <p class="small">Weak temporal discrimination persisted after recalibration; use only as an exploratory research output.</p>
-  </div>
   <div class="card primary">
-    <span class="tag">Primary MIRASH probability output</span>
-    <h3>Sarcopenia</h3><div class="value" id="sarc"></div>
-    <p class="small">This is the original frozen MIRASH probability head and the most directly supported probability output.</p>
+    <span class="tag">Primary MIRASH output</span>
+    <h3>Sarcopenia</h3>
+    <div class="value" id="sarc"></div>
+    <p class="small">Research probability from the compact MIRASH core. No diagnostic threshold is recommended by this calculator.</p>
   </div>
+
   <div class="card">
-    <span class="tag">Secondary severity research probability</span>
-    <h3>Severe sarcopenia</h3><div class="value" id="severe"></div>
-    <p class="small">Strong temporal discrimination but baseline-risk calibration drift. Do not interpret as a clinically validated absolute severity risk.</p>
+    <span class="tag">Secondary research probability</span>
+    <h3>Low estimated muscle mass</h3>
+    <div class="value" id="low_mass"></div>
+    <p class="small">A secondary muscle-mass probability. External evidence is construct-level and includes DXA ASMI in NHANES.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">Secondary severity probability</span>
+    <h3>Severe sarcopenia</h3>
+    <div class="value" id="severe"></div>
+    <p class="small">A research probability for the severe phenotype. It should not be interpreted as a treatment threshold.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">Secondary research probability</span>
+    <h3>Low muscle strength</h3>
+    <div class="value" id="low_strength"></div>
+    <p class="small">A secondary strength-related probability. Direct strength measurement remains the reference assessment.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">Exploratory output</span>
+    <h3>Possible sarcopenia</h3>
+    <div class="value" id="possible"></div>
+    <p class="small">Exploratory research probability; interpret more cautiously than the primary sarcopenia output.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">Continuous research estimate</span>
+    <h3>Skeletal muscle index (SMI)</h3>
+    <div class="value" id="smi"></div>
+    <p class="small">Research estimate only. Do not equate it with directly measured DXA- or BIA-derived muscle mass.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag">Continuous research estimate</span>
+    <h3>Handgrip strength</h3>
+    <div class="value" id="grip"></div>
+    <p class="small">Research estimate only. It is not a replacement for measured handgrip strength.</p>
   </div>
 </div>
 
 <div class="actions">
-<button class="secondary" onclick="copyResults()">Copy results</button>
-<button class="secondary" onclick="window.print()">Print</button>
+  <button class="secondary" onclick="copyResults()">Copy report</button>
+  <button class="secondary" onclick="window.print()">Print</button>
 </div>
 </section>
 
+<h2>Model evaluation summary</h2>
+<div class="evidence-grid">
+  <div class="evidence-item"><span class="metric">CHARLS 2015 sarcopenia:</span> AUC 0.800</div>
+  <div class="evidence-item"><span class="metric">CHARLS 2015 low muscle mass:</span> AUC 0.795</div>
+  <div class="evidence-item"><span class="metric">CHARLS 2015 severe sarcopenia:</span> AUC 0.829</div>
+  <div class="evidence-item"><span class="metric">Participant-independent sensitivity:</span> AUC 0.797</div>
+  <div class="evidence-item"><span class="metric">NHANES confirmed sarcopenia:</span> AUC 0.768</div>
+  <div class="evidence-item"><span class="metric">NHANES DXA ASMI construct:</span> standardized β −0.443</div>
+</div>
+<p class="small">These metrics describe cohort-level model performance and construct replication. They do not establish a diagnostic cutoff for an individual patient.</p>
+
 <h2>Model specification</h2>
+
 <details>
-<summary>Frozen MIRASH core equation</summary>
-<p><code>LP = -3.560992184381921 + 0.1277818820080819×age - 0.189951705101772×sex_female - 0.1470669067614975×hemoglobin + 0.00244916790473318×platelets - 0.3789882124753569×ln(creatinine) - 0.00584560049501891×total_cholesterol + 0.03380228550218713×HDL - 0.3078444088236499×ln(triglycerides) - 0.1347054249667381×uric_acid - 0.1075990346582463×ln(CRP) - 0.4947046847487329×ln(glucose) - 0.924042456215138×ln(HbA1c)</code></p>
-<p class="small">Units: age years; female 0/1; hemoglobin g/dL; platelets 10^9/L; creatinine, total cholesterol, HDL, triglycerides, uric acid and glucose mg/dL; CRP mg/L; HbA1c %.</p>
+<summary>Compact MIRASH core equation</summary>
+<p><code>LP = -5.487398507960009 + 0.12326834468595758×age - 0.1899312810882511×sex_female - 0.1753188540347149×hemoglobin + 0.02671598208556792×HDL - 0.5530624730258957×ln(triglycerides) - 0.1779895176025112×uric_acid - 0.11104092546219071×ln(CRP)</code></p>
+<p class="small">Female sex = 1 and male sex = 0. Units: age in years; hemoglobin in g/dL; HDL-C, triglycerides, and uric acid in mg/dL; CRP in mg/L. Natural logarithms are applied only to triglycerides and CRP. No z-score standardization is used.</p>
 </details>
+
 <details>
-<summary>Seven frozen mapping heads</summary>
-<p><code>Handgrip = 26.6569870857 - 1.7967602424×LP</code></p>
-<p><code>SMI = 5.9310135777 - 0.3411067158×LP</code></p>
-<p><code>P(low strength) = logistic(-1.0149095503 + 0.3966181451×LP)</code></p>
-<p><code>P(low mass) = logistic(0.0188095862 + 0.9870824449×LP)</code></p>
-<p><code>P(possible sarcopenia) = logistic(0.3943004497 + 0.3084592724×LP)</code></p>
+<summary>Seven outcome-specific mapping equations</summary>
+<p><code>Handgrip = 26.441512251255 - 1.950822826823×LP</code></p>
+<p><code>SMI = 5.921770345370 - 0.352917230593×LP</code></p>
+<p><code>P(low strength) = logistic(-0.959870422749 + 0.438709109613×LP)</code></p>
+<p><code>P(low mass) = logistic(0.018640812397 + 0.987559970859×LP)</code></p>
+<p><code>P(possible sarcopenia) = logistic(0.416501049842 + 0.326634205147×LP)</code></p>
 <p><code>P(sarcopenia) = logistic(LP)</code></p>
-<p><code>P(severe sarcopenia) = logistic(-1.7695000856 + 0.9890807858×LP)</code></p>
+<p><code>P(severe sarcopenia) = logistic(-1.723949593645 + 1.021646656687×LP)</code></p>
 </details>
+
 <details>
-<summary>Quality-control / applicability notes</summary>
-<p class="small">The calculator flags values outside the frozen development-domain 8-IQR applicability boundaries. These are not clinical reference ranges and are not formula scaling constants. Positive values are required for all log-transformed inputs.</p>
+<summary>Scope and limitations</summary>
+<p class="small">The current MIRASH model was evaluated in adults aged 60 years or older. CHARLS and NHANES do not provide identical measurements for every phenotype; NHANES strength evidence is proxy-based and DXA ASMI serves as an independent muscle-mass construct replication. The calculator therefore supports research interpretation rather than clinical diagnosis.</p>
 </details>
 
 <footer>
-All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 3.0.0. Default equations are the original CHARLS 2011-frozen heads; no diagnostic or treatment cutoff is optimized or recommended. <span id="selftest">Internal self-test pending.</span>
+All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 4.0.0 uses the final compact MIRASH specification dated 18 September 2026. No diagnostic or treatment cutoff is optimized or recommended. <span id="selftest">Internal self-test pending.</span>
 </footer>
+
 </main>
+
 <script>
 const C = {
- intercept:-3.560992184381921,
- age:0.1277818820080819, sex:-0.189951705101772,
- hemoglobin:-0.1470669067614975, platelets:0.00244916790473318,
- creatinine:-0.3789882124753569, total_chol:-0.00584560049501891,
- hdl:0.03380228550218713, triglycerides:-0.3078444088236499,
- uric_acid:-0.1347054249667381, crp:-0.1075990346582463,
- glucose:-0.4947046847487329, hba1c:-0.924042456215138
+  intercept: -5.487398507960009,
+  age: 0.12326834468595758,
+  sex: -0.1899312810882511,
+  hemoglobin: -0.1753188540347149,
+  hdl: 0.02671598208556792,
+  triglycerides: -0.5530624730258957,
+  uric_acid: -0.1779895176025112,
+  crp: -0.11104092546219071
 };
-const QC = {
- hemoglobin:[-5.100,33.300], platelets:[-542.000,946.000],
- creatinine:[0.072,8.727], total_chol:[-195.233,577.967],
- hdl:[-107.475,207.991], triglycerides:[0.401,26280.961],
- uric_acid:[-8.602,17.499], crp:[0.000001,73603.777],
- glucose:[22.814,466.294], hba1c:[2.064,13.102]
+
+const M = {
+  grip: {intercept: 26.441512251254995, slope: -1.9508228268226984},
+  smi: {intercept: 5.921770345370299, slope: -0.35291723059323815},
+  lowStrength: {intercept: -0.959870422749356, slope: 0.4387091096125193},
+  lowMass: {intercept: 0.01864081239713772, slope: 0.9875599708590864},
+  possible: {intercept: 0.4165010498416116, slope: 0.3266342051469849},
+  severe: {intercept: -1.7239495936446383, slope: 1.021646656687392}
 };
-function logistic(x){return 1/(1+Math.exp(-x))}
-function val(id){return Number(document.getElementById(id).value)}
-function pct(p){return (100*p).toFixed(1)+"%"}
+
+function logistic(x){
+  return 1/(1+Math.exp(-x));
+}
+
+function val(id){
+  return Number(document.getElementById(id).value);
+}
+
+function pct(p){
+  return (100*p).toFixed(1) + "%";
+}
+
 function calculateFrom(v){
- const lp=C.intercept+C.age*v.age+C.sex*v.sex+C.hemoglobin*v.hemoglobin+C.platelets*v.platelets+C.creatinine*Math.log(v.creatinine)+C.total_chol*v.total_chol+C.hdl*v.hdl+C.triglycerides*Math.log(v.triglycerides)+C.uric_acid*v.uric_acid+C.crp*Math.log(v.crp)+C.glucose*Math.log(v.glucose)+C.hba1c*Math.log(v.hba1c);
- return {lp,grip:26.6569870857-1.7967602424*lp,smi:5.9310135777-0.3411067158*lp,lowStrength:logistic(-1.0149095503+0.3966181451*lp),lowMass:logistic(0.0188095862+0.9870824449*lp),possible:logistic(0.3943004497+0.3084592724*lp),sarc:logistic(lp),severe:logistic(-1.7695000856+0.9890807858*lp)};
+  const lp =
+    C.intercept +
+    C.age*v.age +
+    C.sex*v.sex +
+    C.hemoglobin*v.hemoglobin +
+    C.hdl*v.hdl +
+    C.triglycerides*Math.log(v.triglycerides) +
+    C.uric_acid*v.uric_acid +
+    C.crp*Math.log(v.crp);
+
+  return {
+    lp: lp,
+    grip: M.grip.intercept + M.grip.slope*lp,
+    smi: M.smi.intercept + M.smi.slope*lp,
+    lowStrength: logistic(M.lowStrength.intercept + M.lowStrength.slope*lp),
+    lowMass: logistic(M.lowMass.intercept + M.lowMass.slope*lp),
+    possible: logistic(M.possible.intercept + M.possible.slope*lp),
+    sarc: logistic(lp),
+    severe: logistic(M.severe.intercept + M.severe.slope*lp)
+  };
 }
+
 function runSelfTests(){
- const cases=[
-  {v:{age:68,sex:0,hemoglobin:13.5,platelets:210,creatinine:0.9,total_chol:190,hdl:50,triglycerides:120,uric_acid:5.0,crp:1.5,glucose:100,hba1c:5.8},e:{lp:-1.817013571812595,grip:29.921724831434087,smi:6.550809109745022,sarc:0.1397926066754673}},
-  {v:{age:75,sex:1,hemoglobin:12.0,platelets:250,creatinine:1.1,total_chol:210,hdl:55,triglycerides:150,uric_acid:4.8,crp:3.0,glucose:115,hba1c:6.2},e:{lp:-1.0649783633758607,grip:28.570497868029967,smi:6.294284849629199,sarc:0.25635923301020536}},
-  {v:{age:62,sex:0,hemoglobin:15.0,platelets:180,creatinine:0.8,total_chol:170,hdl:45,triglycerides:90,uric_acid:6.0,crp:0.8,glucose:92,hba1c:5.4},e:{lp:-2.7564673299638613,grip:31.609697993653548,smi:6.871263095833967,sarc:0.059722437143911476}}
- ];
- let ok=true;
- for(const t of cases){const r=calculateFrom(t.v);for(const k of Object.keys(t.e)){if(Math.abs(r[k]-t.e[k])>1e-9)ok=false}}
- const el=document.getElementById("selftest");
- if(el) el.textContent=ok?"Internal numerical self-test: PASS.":"Internal numerical self-test: FAIL - do not use this page.";
- window.__selftest_ok=ok;
+  const cases = [
+    {
+      v:{age:68,sex:0,hemoglobin:13.5,hdl:50,triglycerides:120,uric_acid:5.0,crp:1.5},
+      e:{lp:-1.7189093262187554,grip:29.794799802080966,smi:6.528403064420311,sarc:0.1520117026734706}
+    },
+    {
+      v:{age:75,sex:1,hemoglobin:12.0,hdl:55,triglycerides:150,uric_acid:4.8,crp:3.0},
+      e:{lp:-0.8141861282453922,grip:28.0298451355185,smi:6.209110658938094,sarc:0.30699917524100895}
+    },
+    {
+      v:{age:62,sex:0,hemoglobin:15.0,hdl:45,triglycerides:90,uric_acid:6.0,crp:0.8},
+      e:{lp:-2.80415965768572,grip:31.91193092152362,smi:6.911406605902026,sarc:0.057099809307144624}
+    }
+  ];
+
+  let ok = true;
+  for(const t of cases){
+    const r = calculateFrom(t.v);
+    for(const k of Object.keys(t.e)){
+      if(Math.abs(r[k]-t.e[k]) > 1e-9) ok = false;
+    }
+  }
+
+  const el = document.getElementById("selftest");
+  if(el){
+    el.textContent = ok
+      ? "Internal numerical self-test: PASS."
+      : "Internal numerical self-test: FAIL - do not use this page.";
+  }
+  window.__selftest_ok = ok;
 }
+
 function calculate(){
- const ids=["age","hemoglobin","platelets","creatinine","total_chol","hdl","triglycerides","uric_acid","crp","glucose","hba1c"];
- const err=document.getElementById("err"); err.style.display="none"; err.innerHTML="";
- const sexEl=document.getElementById("sex");
- if(sexEl.value===""){err.innerHTML="Please select sex.";err.style.display="block";return}
- if(val("age")<60){err.innerHTML="MIRASH was developed and evaluated in adults aged 60 years or older.";err.style.display="block";return}
- for(const id of ids){
-   const x=val(id);
-   if(!Number.isFinite(x)){err.innerHTML="Please enter all required numeric inputs.";err.style.display="block";return}
- }
- const positive=["hemoglobin","platelets","creatinine","total_chol","hdl","triglycerides","uric_acid","crp","glucose","hba1c"];
- for(const id of positive){
-   if(val(id)<=0){err.innerHTML="Laboratory inputs must be positive; log-transformed variables especially require values >0.";err.style.display="block";return}
- }
- const sex=Number(sexEl.value);
- const rr=calculateFrom({age:val("age"),sex,hemoglobin:val("hemoglobin"),platelets:val("platelets"),creatinine:val("creatinine"),total_chol:val("total_chol"),hdl:val("hdl"),triglycerides:val("triglycerides"),uric_acid:val("uric_acid"),crp:val("crp"),glucose:val("glucose"),hba1c:val("hba1c")});
- const {lp,grip,smi,lowStrength,lowMass,possible,sarc,severe}=rr;
+  const err = document.getElementById("err");
+  err.style.display = "none";
+  err.innerHTML = "";
 
- document.getElementById("lp").textContent=lp.toFixed(6);
- document.getElementById("grip").textContent=grip.toFixed(2)+" kg";
- document.getElementById("smi").textContent=smi.toFixed(2)+" kg/m²";
- document.getElementById("low_strength").textContent=pct(lowStrength);
- document.getElementById("low_mass").textContent=pct(lowMass);
- document.getElementById("possible").textContent=pct(possible);
- document.getElementById("sarc").textContent=pct(sarc);
- document.getElementById("severe").textContent=pct(severe);
+  const sexEl = document.getElementById("sex");
+  if(sexEl.value === ""){
+    err.innerHTML = "Please select sex.";
+    err.style.display = "block";
+    return;
+  }
 
- const warns=[];
- for(const [id,b] of Object.entries(QC)){
-   const x=val(id);
-   if(x<b[0] || x>b[1]) warns.push(id.replaceAll("_"," ")+" is outside the frozen development-domain applicability boundary ("+b[0]+" to "+b[1]+").");
- }
- const qc=document.getElementById("qc");
- if(warns.length){qc.innerHTML="<strong>Applicability warning:</strong><br>"+warns.join("<br>")+"<br><span class='small'>These boundaries are QC/applicability limits, not clinical reference intervals.</span>";qc.style.display="block"}
- else{qc.style.display="none";qc.innerHTML=""}
- document.getElementById("results").style.display="block";
- window.__last={lp,grip,smi,lowStrength,lowMass,possible,sarc,severe};
+  const age = val("age");
+  if(!Number.isFinite(age)){
+    err.innerHTML = "Please enter age.";
+    err.style.display = "block";
+    return;
+  }
+  if(age < 60){
+    err.innerHTML = "MIRASH was evaluated in adults aged 60 years or older.";
+    err.style.display = "block";
+    return;
+  }
+
+  const ids = ["hemoglobin","hdl","triglycerides","uric_acid","crp"];
+  for(const id of ids){
+    const x = val(id);
+    if(!Number.isFinite(x)){
+      err.innerHTML = "Please enter all five laboratory values.";
+      err.style.display = "block";
+      return;
+    }
+    if(x <= 0){
+      err.innerHTML = "Laboratory inputs must be greater than 0.";
+      err.style.display = "block";
+      return;
+    }
+  }
+
+  const sex = Number(sexEl.value);
+  const rr = calculateFrom({
+    age: age,
+    sex: sex,
+    hemoglobin: val("hemoglobin"),
+    hdl: val("hdl"),
+    triglycerides: val("triglycerides"),
+    uric_acid: val("uric_acid"),
+    crp: val("crp")
+  });
+
+  document.getElementById("lp").textContent = rr.lp.toFixed(6);
+  document.getElementById("grip").textContent = rr.grip.toFixed(2) + " kg";
+  document.getElementById("smi").textContent = rr.smi.toFixed(2) + " kg/m²";
+  document.getElementById("low_strength").textContent = pct(rr.lowStrength);
+  document.getElementById("low_mass").textContent = pct(rr.lowMass);
+  document.getElementById("possible").textContent = pct(rr.possible);
+  document.getElementById("sarc").textContent = pct(rr.sarc);
+  document.getElementById("severe").textContent = pct(rr.severe);
+
+  document.getElementById("results").style.display = "block";
+  window.__last = rr;
 }
+
 function resetForm(){
- document.querySelectorAll("input").forEach(x=>x.value="");
- document.getElementById("sex").value="";
- document.getElementById("results").style.display="none";
- document.getElementById("err").style.display="none";
- document.getElementById("qc").style.display="none";
+  document.querySelectorAll("input").forEach(function(x){x.value = "";});
+  document.getElementById("sex").value = "";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("err").style.display = "none";
+  window.__last = null;
 }
+
 function loadExample(){
- const ex={age:68,hemoglobin:13.5,platelets:210,creatinine:0.9,total_chol:190,hdl:50,triglycerides:120,uric_acid:5.0,crp:1.5,glucose:100,hba1c:5.8};
- for(const [k,v] of Object.entries(ex)) document.getElementById(k).value=v;
- document.getElementById("sex").value="0";
- calculate();
+  const ex = {
+    age:68,
+    hemoglobin:13.5,
+    hdl:50,
+    triglycerides:120,
+    uric_acid:5.0,
+    crp:1.5
+  };
+  for(const k of Object.keys(ex)){
+    document.getElementById(k).value = ex[k];
+  }
+  document.getElementById("sex").value = "0";
+  calculate();
 }
+
 async function copyResults(){
- if(!window.__last)return;
- const r=window.__last;
- const text=[
- "MIRASH seven-output research calculator",
- "MIRASH LP: "+r.lp.toFixed(6),
- "Handgrip estimate: "+r.grip.toFixed(2)+" kg",
- "SMI estimate: "+r.smi.toFixed(2)+" kg/m²",
- "Low muscle strength probability: "+pct(r.lowStrength),
- "Low estimated muscle mass probability: "+pct(r.lowMass),
- "Possible sarcopenia probability (exploratory): "+pct(r.possible),
- "Sarcopenia probability (primary): "+pct(r.sarc),
- "Severe sarcopenia probability (research): "+pct(r.severe),
- "No diagnostic cutoff is proposed."
- ].join("\n");
- try{await navigator.clipboard.writeText(text);alert("Results copied.");}
- catch(e){prompt("Copy the results below:",text);}
+  if(!window.__last) return;
+  const r = window.__last;
+  const text = [
+    "MIRASH muscle health research calculator - compact model v4.0.0",
+    "MIRASH LP: " + r.lp.toFixed(6),
+    "Sarcopenia probability (primary): " + pct(r.sarc),
+    "Low estimated muscle mass probability: " + pct(r.lowMass),
+    "Severe sarcopenia probability: " + pct(r.severe),
+    "Low muscle strength probability: " + pct(r.lowStrength),
+    "Possible sarcopenia probability (exploratory): " + pct(r.possible),
+    "SMI research estimate: " + r.smi.toFixed(2) + " kg/m²",
+    "Handgrip research estimate: " + r.grip.toFixed(2) + " kg",
+    "No diagnostic cutoff is proposed."
+  ].join("\n");
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Report copied.");
+  }catch(e){
+    prompt("Copy the report below:", text);
+  }
 }
-window.addEventListener("DOMContentLoaded",runSelfTests);
+
+window.addEventListener("DOMContentLoaded", runSelfTests);
 </script>
+
 </body>
 </html>

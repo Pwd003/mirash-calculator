@@ -50,7 +50,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 <body>
 <main>
 
-<h1>MIRASH Research Calculator <span class="version">v5.0.0</span></h1>
+<h1>MIRASH Research Calculator <span class="version">v5.1.0</span></h1>
 <p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a laboratory-derived muscle-health/sarcopenia score based on age, sex, and five routine laboratory measures. The score was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently externally validated in NHANES 1999–2002.</p>
 
 <div class="notice">
@@ -76,16 +76,28 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     </select>
   </div>
   <div class="field">
-    <label>Hemoglobin <span class="unit">(g/dL)</span></label>
+    <label>Hemoglobin</label>
     <input id="hemoglobin" type="number" step="0.01" min="0.01" required>
+    <select id="hemoglobin_unit" style="margin-top:7px">
+      <option value="gdl">g/dL</option>
+      <option value="gl">g/L</option>
+    </select>
   </div>
   <div class="field">
-    <label>HDL cholesterol <span class="unit">(mg/dL)</span></label>
+    <label>HDL cholesterol</label>
     <input id="hdl" type="number" step="0.1" min="0.01" required>
+    <select id="hdl_unit" style="margin-top:7px">
+      <option value="mgdl">mg/dL</option>
+      <option value="mmol">mmol/L</option>
+    </select>
   </div>
   <div class="field">
-    <label>Triglycerides <span class="unit">(mg/dL)</span></label>
+    <label>Triglycerides</label>
     <input id="triglycerides" type="number" step="0.1" min="0.001" required>
+    <select id="triglycerides_unit" style="margin-top:7px">
+      <option value="mgdl">mg/dL</option>
+      <option value="mmol">mmol/L</option>
+    </select>
   </div>
   <div class="field">
     <label>Uric acid</label>
@@ -96,12 +108,16 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     </select>
   </div>
   <div class="field">
-    <label>C-reactive protein <span class="unit">(mg/L)</span></label>
+    <label>C-reactive protein</label>
     <input id="crp" type="number" step="0.001" min="0.001" required>
+    <select id="crp_unit" style="margin-top:7px">
+      <option value="mgl">mg/L</option>
+      <option value="mgdl">mg/dL</option>
+    </select>
   </div>
 </div>
 
-<p class="small">Triglycerides and CRP must be greater than 0 because the MIRASH equation uses their natural logarithms. Uric acid may be entered in mg/dL or µmol/L; values entered in µmol/L are automatically converted to mg/dL using 1 mg/dL = 59.48 µmol/L before calculation.</p>
+<p class="small">Choose the unit actually reported by the laboratory. The calculator converts all inputs to the units used in model development before calculation: hemoglobin to g/dL; HDL-C and triglycerides to mg/dL; uric acid to mg/dL; and CRP to mg/L. Triglycerides and CRP must be greater than 0 because the MIRASH equation uses their natural logarithms. Extreme or unusual input combinations may lie outside the range adequately represented in the development cohort and should not be interpreted as clinically reliable solely from this calculator.</p>
 
 <div class="actions">
   <button onclick="calculate()">Calculate</button>
@@ -126,7 +142,8 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     <span class="tag">Primary model output</span>
     <h3>Sarcopenia probability</h3>
     <div class="value" id="sarc"></div>
-    <p class="small">Calculated as logistic(MIRASH score). This is a research probability rather than a diagnosis.</p>
+    <p class="small">Calculated as logistic(MIRASH score). This is a research probability rather than a diagnosis. Check the converted input values below before interpreting the result.</p>
+    <div id="converted" class="small" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -179,7 +196,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 </details>
 
 <footer>
-All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 5.0.0 implements the MIRASH core score and primary sarcopenia probability only. <span id="selftest">Internal self-test pending.</span>
+All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 5.1.0 implements the MIRASH core score and primary sarcopenia probability only. <span id="selftest">Internal self-test pending.</span>
 </footer>
 
 </main>
@@ -208,10 +225,26 @@ function pct(p){
   return (100*p).toFixed(1) + "%";
 }
 
+function hemoglobinGdl(){
+  const x = val("hemoglobin");
+  return document.getElementById("hemoglobin_unit").value === "gl" ? x/10 : x;
+}
+function hdlMgDl(){
+  const x = val("hdl");
+  return document.getElementById("hdl_unit").value === "mmol" ? x*38.67 : x;
+}
+function triglyceridesMgDl(){
+  const x = val("triglycerides");
+  return document.getElementById("triglycerides_unit").value === "mmol" ? x*88.57 : x;
+}
 function uricAcidMgDl(){
   const x = val("uric_acid");
   const unit = document.getElementById("uric_acid_unit").value;
   return unit === "umol" ? x / 59.48 : x;
+}
+function crpMgL(){
+  const x = val("crp");
+  return document.getElementById("crp_unit").value === "mgdl" ? x*10 : x;
 }
 
 function calculateFrom(v){
@@ -306,9 +339,14 @@ function calculate(){
     }
   }
 
+  const hbGdl = hemoglobinGdl();
+  const hdlMg = hdlMgDl();
+  const tgMg = triglyceridesMgDl();
   const uaMgDl = uricAcidMgDl();
-  if(!Number.isFinite(uaMgDl) || uaMgDl <= 0){
-    err.innerHTML = "Please check the uric acid value and unit.";
+  const crpMl = crpMgL();
+
+  if([hbGdl,hdlMg,tgMg,uaMgDl,crpMl].some(x => !Number.isFinite(x) || x <= 0)){
+    err.innerHTML = "Please check the laboratory values and selected units.";
     err.style.display = "block";
     return;
   }
@@ -316,15 +354,19 @@ function calculate(){
   const rr = calculateFrom({
     age: age,
     sex: Number(sexEl.value),
-    hemoglobin: val("hemoglobin"),
-    hdl: val("hdl"),
-    triglycerides: val("triglycerides"),
+    hemoglobin: hbGdl,
+    hdl: hdlMg,
+    triglycerides: tgMg,
     uric_acid_mgdl: uaMgDl,
-    crp: val("crp")
+    crp: crpMl
   });
 
   document.getElementById("lp").textContent = rr.score.toFixed(6);
   document.getElementById("sarc").textContent = pct(rr.sarc);
+  document.getElementById("converted").textContent =
+    "Values used by the model: hemoglobin " + hbGdl.toFixed(2) + " g/dL; HDL-C " +
+    hdlMg.toFixed(2) + " mg/dL; triglycerides " + tgMg.toFixed(2) + " mg/dL; uric acid " +
+    uaMgDl.toFixed(2) + " mg/dL; CRP " + crpMl.toFixed(2) + " mg/L.";
 
   document.getElementById("results").style.display = "block";
   window.__last = rr;
@@ -333,7 +375,11 @@ function calculate(){
 function resetForm(){
   document.querySelectorAll("input").forEach(function(x){x.value = "";});
   document.getElementById("sex").value = "";
+  document.getElementById("hemoglobin_unit").value = "gdl";
+  document.getElementById("hdl_unit").value = "mgdl";
+  document.getElementById("triglycerides_unit").value = "mgdl";
   document.getElementById("uric_acid_unit").value = "mgdl";
+  document.getElementById("crp_unit").value = "mgl";
   document.getElementById("results").style.display = "none";
   document.getElementById("err").style.display = "none";
   window.__last = null;
@@ -352,7 +398,11 @@ function loadExample(){
     document.getElementById(k).value = ex[k];
   }
   document.getElementById("sex").value = "0";
+  document.getElementById("hemoglobin_unit").value = "gdl";
+  document.getElementById("hdl_unit").value = "mgdl";
+  document.getElementById("triglycerides_unit").value = "mgdl";
   document.getElementById("uric_acid_unit").value = "mgdl";
+  document.getElementById("crp_unit").value = "mgl";
   calculate();
 }
 
@@ -360,7 +410,7 @@ async function copyResults(){
   if(!window.__last) return;
   const r = window.__last;
   const text = [
-    "MIRASH research calculator - v5.0.0",
+    "MIRASH research calculator - v5.1.0",
     "MIRASH score: " + r.score.toFixed(6),
     "Sarcopenia probability: " + pct(r.sarc),
     "No diagnostic cutoff is proposed.",

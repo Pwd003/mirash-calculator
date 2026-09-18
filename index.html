@@ -50,7 +50,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 <body>
 <main>
 
-<h1>MIRASH Research Calculator <span class="version">v5.1.0</span></h1>
+<h1>MIRASH Research Calculator <span class="version">v6.0.0</span></h1>
 <p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a laboratory-derived muscle-health/sarcopenia score based on age, sex, and five routine laboratory measures. The score was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently externally validated in NHANES 1999–2002.</p>
 
 <div class="notice">
@@ -170,9 +170,9 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="evidence-item"><span class="metric">CHARLS 2015 sarcopenia:</span> AUC 0.800</div>
   <div class="evidence-item"><span class="metric">Participant-independent sensitivity:</span> AUC 0.797</div>
   <div class="evidence-item"><span class="metric">CHARLS 2015 low muscle mass:</span> AUC 0.795</div>
-  <div class="evidence-item"><span class="metric">CHARLS 2015 SMI:</span> predictive R² 0.135</div>
+  <div class="evidence-item"><span class="metric">CHARLS 2015 SMI:</span> R² 0.126</div>
   <div class="evidence-item"><span class="metric">NHANES confirmed sarcopenia:</span> AUC 0.768</div>
-  <div class="evidence-item"><span class="metric">NHANES DXA ASMI:</span> standardized β −0.443</div>
+  <div class="evidence-item"><span class="metric">NHANES DXA ASMI:</span> standardized β −0.407</div>
 </div>
 <p class="small">These are cohort-level performance and external-validation results. They do not imply that MIRASH directly predicts an individual's measured handgrip strength or SMI.</p>
 
@@ -180,9 +180,10 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <details>
 <summary>MIRASH core equation</summary>
-<p><code>Score = -5.487398507960009 + 0.12326834468595758×age - 0.1899312810882511×sex_female - 0.1753188540347149×hemoglobin + 0.02671598208556792×HDL - 0.5530624730258957×ln(triglycerides) - 0.1779895176025112×uric_acid_mg_dL - 0.11104092546219071×ln(CRP)</code></p>
+<p><code>UA_c = uric_acid_mg_dL - 4.4520001411438</code></p>
+<p><code>Score = -6.3588292227466905 + 0.1238711005049799×age - 0.2205425806334254×sex_female - 0.1750523404277856×hemoglobin + 0.0266687491667375×HDL - 0.5611718262015551×ln(triglycerides) - 0.2389832281382797×UA_c + 0.0540754147734259×UA_c² - 0.1075228274977055×ln(CRP)</code></p>
 <p><code>P(sarcopenia) = 1 / [1 + exp(-Score)]</code></p>
-<p class="small">Female sex = 1 and male sex = 0. Units: age in years; hemoglobin in g/dL; HDL-C and triglycerides in mg/dL; uric acid is converted to mg/dL before calculation; CRP in mg/L. Natural logarithms are applied only to triglycerides and CRP. No z-score standardization is used.</p>
+<p class="small">Female sex = 1 and male sex = 0. Units: age in years; hemoglobin in g/dL; HDL-C and triglycerides in mg/dL; uric acid is converted to mg/dL before calculation; CRP in mg/L. Natural logarithms are applied only to triglycerides and CRP. Uric acid enters the model as a centered quadratic term using the frozen CHARLS 2011 center of 4.4520001411438 mg/dL. The model-estimated uric-acid nadir (~6.66 mg/dL) is a shape descriptor, not a clinical target or treatment threshold. No z-score standardization is used.</p>
 </details>
 
 <details>
@@ -196,21 +197,23 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 </details>
 
 <footer>
-All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 5.1.0 implements the MIRASH core score and primary sarcopenia probability only. <span id="selftest">Internal self-test pending.</span>
+All calculations are performed locally in the browser; this static page does not transmit or store entered values. Version 6.0.0 implements the final frozen quadratic-uric-acid MIRASH score and primary sarcopenia probability only. <span id="selftest">Internal self-test pending.</span>
 </footer>
 
 </main>
 
 <script>
 const C = {
-  intercept: -5.487398507960009,
-  age: 0.12326834468595758,
-  sex: -0.1899312810882511,
-  hemoglobin: -0.1753188540347149,
-  hdl: 0.02671598208556792,
-  triglycerides: -0.5530624730258957,
-  uric_acid: -0.1779895176025112,
-  crp: -0.11104092546219071
+  intercept: -6.3588292227466905,
+  age: 0.1238711005049799,
+  sex: -0.2205425806334254,
+  hemoglobin: -0.1750523404277856,
+  hdl: 0.0266687491667375,
+  triglycerides: -0.5611718262015551,
+  uric_acid_center: 4.4520001411438,
+  uric_acid_linear: -0.2389832281382797,
+  uric_acid_quadratic: 0.0540754147734259,
+  crp: -0.1075228274977055
 };
 
 function logistic(x){
@@ -248,6 +251,7 @@ function crpMgL(){
 }
 
 function calculateFrom(v){
+  const uaCentered = v.uric_acid_mgdl - C.uric_acid_center;
   const score =
     C.intercept +
     C.age*v.age +
@@ -255,7 +259,8 @@ function calculateFrom(v){
     C.hemoglobin*v.hemoglobin +
     C.hdl*v.hdl +
     C.triglycerides*Math.log(v.triglycerides) +
-    C.uric_acid*v.uric_acid_mgdl +
+    C.uric_acid_linear*uaCentered +
+    C.uric_acid_quadratic*uaCentered*uaCentered +
     C.crp*Math.log(v.crp);
 
   return {
@@ -268,15 +273,15 @@ function runSelfTests(){
   const cases = [
     {
       v:{age:68,sex:0,hemoglobin:13.5,hdl:50,triglycerides:120,uric_acid_mgdl:5.0,crp:1.5},
-      e:{score:-1.7189093262187554,sarc:0.1520117026734706}
+      e:{score:-1.8102894852393847,sarc:0.14060314246459804}
     },
     {
       v:{age:75,sex:1,hemoglobin:12.0,hdl:55,triglycerides:150,uric_acid_mgdl:4.8,crp:3.0},
-      e:{score:-0.8141861282453922,sarc:0.30699917524100895}
+      e:{score:-0.9294567904313261,sarc:0.28303493294591897}
     },
     {
       v:{age:62,sex:0,hemoglobin:15.0,hdl:45,triglycerides:90,uric_acid_mgdl:6.0,crp:0.8},
-      e:{score:-2.80415965768572,sarc:0.057099809307144624}
+      e:{score:-2.846050664368778,sarc:0.05488582279418672}
     }
   ];
 
@@ -410,7 +415,7 @@ async function copyResults(){
   if(!window.__last) return;
   const r = window.__last;
   const text = [
-    "MIRASH research calculator - v5.1.0",
+    "MIRASH research calculator - v6.0.0",
     "MIRASH score: " + r.score.toFixed(6),
     "Sarcopenia probability: " + pct(r.sarc),
     "No diagnostic cutoff is proposed.",

@@ -1,66 +1,79 @@
 {
-  "model_name": "MIRASH Seven-Output Research Calculator",
-  "version": "3.0.0",
-  "model_status": "Frozen core formula with seven original CHARLS 2011-frozen outcome-specific mapping heads",
+  "model_name": "MIRASH Sarcopenia Research Calculator",
+  "version": "7.0.0",
+  "model_status": "Final frozen quadratic-uric-acid MIRASH model with development-derived screen-positive operating point",
   "target_population": "Adults aged 60 years or older",
-  "default_governance": "Original CHARLS 2011-frozen heads are used by default. CHARLS 2015 recalibration is secondary sensitivity only.",
   "core_formula": {
-    "intercept": -3.560992184381921,
+    "intercept": -6.3588292227466905,
     "coefficients": {
-      "age": 0.1277818820080819,
-      "sex": -0.189951705101772,
-      "hemoglobin": -0.1470669067614975,
-      "platelets": 0.00244916790473318,
-      "creatinine": -0.3789882124753569,
-      "total_chol": -0.00584560049501891,
-      "hdl": 0.03380228550218713,
-      "triglycerides": -0.3078444088236499,
-      "uric_acid": -0.1347054249667381,
-      "crp": -0.1075990346582463,
-      "glucose": -0.4947046847487329,
-      "hba1c": -0.924042456215138
+      "age": 0.1238711005049799,
+      "sex_female": -0.2205425806334254,
+      "hemoglobin_g_dL": -0.1750523404277856,
+      "hdl_mg_dL": 0.0266687491667375,
+      "ln_triglycerides_mg_dL": -0.5611718262015551,
+      "uric_acid_centered_mg_dL": -0.2389832281382797,
+      "uric_acid_centered_squared": 0.0540754147734259,
+      "ln_crp_mg_L": -0.1075228274977055
     },
-    "log_transformed_inputs": ["creatinine", "triglycerides", "crp", "glucose", "hba1c"],
-    "note": "No z-score, mean/SD, or median/IQR standardization is applied."
+    "uric_acid_center_mg_dL": 4.4520001411438,
+    "note": "No z-score standardization. Natural logarithms are applied to triglycerides and CRP only."
   },
-  "mapping_heads": {
-    "handgrip_strength": {"type": "continuous", "intercept": 26.6569870857, "mirash_lp_slope": -1.7967602424, "role": "auxiliary continuous muscle-strength estimate"},
-    "smi": {"type": "continuous", "intercept": 5.9310135777, "mirash_lp_slope": -0.3411067158, "role": "auxiliary continuous muscle-mass construct estimate"},
-    "low_muscle_strength": {"type": "binary", "intercept": -1.0149095503, "mirash_lp_slope": 0.3966181451, "role": "secondary research probability"},
-    "low_estimated_muscle_mass": {"type": "binary", "intercept": 0.0188095862, "mirash_lp_slope": 0.9870824449, "role": "secondary research probability"},
-    "possible_sarcopenia": {"type": "binary", "intercept": 0.3943004497, "mirash_lp_slope": 0.3084592724, "role": "exploratory probability only"},
-    "sarcopenia": {"type": "binary", "intercept": 0.0, "mirash_lp_slope": 1.0, "role": "primary MIRASH probability output"},
-    "severe_sarcopenia": {"type": "binary", "intercept": -1.7695000856, "mirash_lp_slope": 0.9890807858, "role": "secondary severity research probability"}
+  "primary_output": "Model-estimated sarcopenia probability = logistic(MIRASH linear predictor)",
+  "threshold": {
+    "derivation_method": "Youden J in CHARLS 2011 development data",
+    "exact_probability_cutoff": 0.148374094750412,
+    "exact_linear_predictor_cutoff": -1.74741060024184,
+    "human_readable_display": "approximately 15%",
+    "classification_rule": "probability >= exact cutoff => HIGH RISK / SCREEN POSITIVE",
+    "interpretation": "Case-finding trigger for confirmatory sarcopenia assessment; not a stand-alone diagnosis",
+    "reoptimized_in_CHARLS2015": false,
+    "reoptimized_in_NHANES": false
   },
-  "threshold_policy": "No diagnostic/risk/treatment cutoff is optimized or recommended.",
-  "interpretation": {
-    "handgrip_strength": "Do not describe as a clinically accurate substitute for measured handgrip strength.",
-    "smi": "Do not equate with DXA/BIA-measured muscle mass.",
-    "low_muscle_strength": "Moderate temporal discrimination and calibration drift; not a stand-alone diagnostic probability.",
-    "low_estimated_muscle_mass": "Good temporal discrimination/calibration; external evidence is construct-level rather than identical-definition validation.",
-    "possible_sarcopenia": "Weak temporal discrimination persisted after recalibration; exploratory only.",
-    "sarcopenia": "Primary probability output; original frozen target.",
-    "severe_sarcopenia": "Strong temporal discrimination but baseline-risk calibration drift; not a clinically validated absolute severity risk."
+  "validation": {
+    "CHARLS2011": {
+      "n": 3517,
+      "events": 663,
+      "auc": 0.783,
+      "brier": 0.127,
+      "sensitivity_at_cutoff": 0.805429864253394,
+      "specificity_at_cutoff": 0.626489138051857,
+      "npv_at_cutoff": 0.932707355242566
+    },
+    "CHARLS2015": {
+      "n": 5871,
+      "events": 837,
+      "auc": 0.8066179845627985,
+      "auc_ci": [
+        0.7908179492945797,
+        0.8224180198310174
+      ],
+      "brier": 0.10150659359025654,
+      "calibration_intercept": -0.39556021427975235,
+      "calibration_slope": 1.097317963461153,
+      "oe": 0.76074508046754,
+      "sensitivity_at_cutoff": 0.810035842293907,
+      "specificity_at_cutoff": 0.615017878426698,
+      "npv_at_cutoff": 0.951152073732719
+    },
+    "NHANES1999_2002": {
+      "n": 1982,
+      "events_range": "363-368",
+      "auc": 0.768,
+      "auc_ci": [
+        0.733,
+        0.799
+      ],
+      "brier": 0.126,
+      "calibration_intercept": -0.105,
+      "calibration_slope": 0.875,
+      "oe": 0.934,
+      "sensitivity_at_cutoff": 0.7552314857738862,
+      "specificity_at_cutoff": 0.6155647136305931,
+      "npv_at_cutoff": 0.9187765561728201,
+      "interpretation": "external threshold transportability because outcome measurements/definitions differ from CHARLS"
+    }
   },
-  "frozen_temporal_performance": {
-    "low_muscle_strength": {"auc": 0.674444, "brier": 0.137022, "oe": 1.134556},
-    "low_estimated_muscle_mass": {"auc": 0.800494, "brier": 0.121918, "oe": 1.037595},
-    "possible_sarcopenia": {"auc": 0.622673, "brier": 0.227711, "oe": 0.768835},
-    "sarcopenia": {"auc": 0.804193, "brier": 0.114846, "oe": 0.983165},
-    "severe_sarcopenia": {"auc": 0.83222, "brier": 0.050008, "oe": 1.321995},
-    "handgrip_strength": {"predictive_r2": 0.065238, "rmse": 8.74699, "mae": 7.205733},
-    "smi": {"predictive_r2": 0.132776, "rmse": 1.068851, "mae": 0.89947}
-  },
-  "nhanes_external_construct_replication": {
-    "low_strength_proxy_auc": 0.739,
-    "low_absolute_muscle_mass_auc": 0.724,
-    "low_asmi_sensitivity_auc": 0.724,
-    "confirmed_sarcopenia_auc": 0.772,
-    "charls_structure_analogue_auc": 0.768,
-    "severe_sarcopenia_auc": 0.751,
-    "hgs_equivalent_standardized_beta": -0.476,
-    "dxa_asmi_standardized_beta": -0.472
-  },
+  "phenotype_framework": "Six non-primary muscle-health phenotypes were evaluated at cohort level only and are not deployed as separate individual-level probability calculators.",
   "privacy": "All calculations are performed locally in the browser.",
   "validation_cases_file": "validation_cases.csv"
 }

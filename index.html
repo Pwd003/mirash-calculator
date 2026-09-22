@@ -50,11 +50,11 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 <body>
 <main>
 
-<h1>MIRASH Research Calculator <span class="version">v6.0.0</span></h1>
+<h1>MIRASH Research Calculator <span class="version">v7.0.0</span></h1>
 <p class="lead"><strong>MIRASH</strong> (Metabolic–Inflammatory–Renal–Age–Sex–Hematologic) is a laboratory-derived muscle-health/sarcopenia score based on age, sex, and five routine laboratory measures. The score was developed in CHARLS 2011, temporally evaluated in CHARLS 2015, and independently externally validated in NHANES 1999–2002.</p>
 
 <div class="notice">
-<strong>Research-use notice.</strong> This calculator reports only the MIRASH score and the model-estimated sarcopenia probability. It does not estimate an individual's handgrip strength, skeletal muscle index, or the probability of other muscle phenotypes. MIRASH is not a diagnostic device and does not replace direct assessment of muscle strength, muscle quantity, physical performance, or clinician judgment. No diagnostic or treatment cutoff is proposed.
+<strong>Research-use notice.</strong> This calculator reports the MIRASH score, the model-estimated sarcopenia probability, and a <strong>screen-positive/high-risk classification</strong>. The development-derived screen-positive threshold is 14.84% (exact analytic cutoff 0.148374094750412; displayed as approximately 15%). A screen-positive result should prompt confirmatory sarcopenia assessment. It is <strong>not</strong> a stand-alone diagnosis and does not replace direct assessment of muscle strength, muscle quantity, physical performance, or clinician judgment.
 </div>
 
 <div class="note-soft">
@@ -135,7 +135,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     <span class="tag">Continuous score</span>
     <h3>MIRASH score</h3>
     <div class="value" id="lp"></div>
-    <p class="small">This is the MIRASH linear predictor. Higher values correspond to a higher model-estimated probability of sarcopenia. No score cutoff is recommended.</p>
+    <p class="small">This is the MIRASH linear predictor. Higher values correspond to a higher model-estimated probability of sarcopenia. The equivalent frozen screen-positive LP threshold is -1.747410600242.</p>
   </div>
 
   <div class="card primary">
@@ -145,6 +145,17 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
     <p class="small">Calculated as logistic(MIRASH score). This is a research probability rather than a diagnosis. Check the converted input values below before interpreting the result.</p>
     <div id="converted" class="small" style="margin-top:8px"></div>
   </div>
+
+  <div class="card primary">
+    <span class="tag">Clinical screening interpretation</span>
+    <h3>Screen-positive classification</h3>
+    <div class="value" id="classification"></div>
+    <p class="small" id="classification_note"></p>
+  </div>
+</div>
+
+<div class="note-soft" style="margin-top:12px">
+<strong>Frozen operating point.</strong> The exact internal cutoff is <strong>0.148374094750412</strong> (14.84%); the interface displays this as approximately <strong>15%</strong>. The cutoff was derived in CHARLS 2011 using prespecified Youden J and then applied unchanged in CHARLS 2015 and NHANES. It is a case-finding trigger, not a diagnostic threshold.
 </div>
 
 <div class="actions">
@@ -167,9 +178,9 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <h2>Model evaluation summary</h2>
 <div class="evidence-grid">
-  <div class="evidence-item"><span class="metric">CHARLS 2015 sarcopenia:</span> AUC 0.800</div>
-  <div class="evidence-item"><span class="metric">Participant-independent sensitivity:</span> AUC 0.797</div>
-  <div class="evidence-item"><span class="metric">CHARLS 2015 low muscle mass:</span> AUC 0.795</div>
+  <div class="evidence-item"><span class="metric">CHARLS 2015 sarcopenia:</span> AUC 0.807 (0.791-0.822)</div>
+  <div class="evidence-item"><span class="metric">Participant-independent sensitivity:</span> AUC 0.812 (0.786-0.838)</div>
+  <div class="evidence-item"><span class="metric">CHARLS 2015 low muscle mass:</span> AUC 0.801 (0.786-0.817)</div>
   <div class="evidence-item"><span class="metric">CHARLS 2015 SMI:</span> R² 0.126</div>
   <div class="evidence-item"><span class="metric">NHANES confirmed sarcopenia:</span> AUC 0.768</div>
   <div class="evidence-item"><span class="metric">NHANES DXA ASMI:</span> standardized β −0.407</div>
@@ -193,7 +204,7 @@ footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <details>
 <summary>Scope and limitations</summary>
-<p class="small">MIRASH was evaluated in adults aged 60 years or older. NHANES serves as an independent external validation dataset, although some muscle phenotypes use measurement systems that differ from CHARLS. Those measurement-different analyses are interpreted as supportive external construct validation. The calculator is intended for research use and does not establish a diagnostic or treatment threshold.</p>
+<p class="small">MIRASH was evaluated in adults aged 60 years or older. NHANES serves as an independent external transportability dataset, although some muscle phenotypes use measurement systems that differ from CHARLS. The frozen 14.84% screen-positive operating point is intended to identify individuals who should proceed to confirmatory sarcopenia assessment; it is not a stand-alone diagnostic or treatment threshold. A result below the cutoff does not exclude sarcopenia when clinical suspicion is present.</p>
 </details>
 
 <footer>
@@ -203,6 +214,7 @@ All calculations are performed locally in the browser; this static page does not
 </main>
 
 <script>
+const SCREEN_POSITIVE_THRESHOLD = 0.148374094750412;
 const C = {
   intercept: -6.3588292227466905,
   age: 0.1238711005049799,
@@ -263,9 +275,11 @@ function calculateFrom(v){
     C.uric_acid_quadratic*uaCentered*uaCentered +
     C.crp*Math.log(v.crp);
 
+  const sarc = logistic(score);
   return {
     score: score,
-    sarc: logistic(score)
+    sarc: sarc,
+    screenPositive: sarc >= SCREEN_POSITIVE_THRESHOLD
   };
 }
 
@@ -301,6 +315,11 @@ function runSelfTests(){
     el.textContent = ok
       ? "Internal numerical self-test: PASS."
       : "Internal numerical self-test: FAIL - do not use this page.";
+  }
+  for(const t of cases){
+    const r = calculateFrom(t.v);
+    const expectedClass = t.e.sarc >= SCREEN_POSITIVE_THRESHOLD;
+    if(r.screenPositive !== expectedClass) ok = false;
   }
   window.__selftest_ok = ok;
 }
@@ -368,6 +387,12 @@ function calculate(){
 
   document.getElementById("lp").textContent = rr.score.toFixed(6);
   document.getElementById("sarc").textContent = pct(rr.sarc);
+  document.getElementById("classification").textContent =
+    rr.screenPositive ? "HIGH RISK / SCREEN POSITIVE" : "LOWER PREDICTED RISK";
+  document.getElementById("classification_note").textContent =
+    rr.screenPositive
+      ? "Probability is at or above the exact 14.84% screen-positive threshold. Confirmatory sarcopenia assessment is recommended."
+      : "Probability is below the exact 14.84% screen-positive threshold. This does not rule out sarcopenia when clinical suspicion is present.";
   document.getElementById("converted").textContent =
     "Values used by the model: hemoglobin " + hbGdl.toFixed(2) + " g/dL; HDL-C " +
     hdlMg.toFixed(2) + " mg/dL; triglycerides " + tgMg.toFixed(2) + " mg/dL; uric acid " +
@@ -415,10 +440,13 @@ async function copyResults(){
   if(!window.__last) return;
   const r = window.__last;
   const text = [
-    "MIRASH research calculator - v6.0.0",
+    "MIRASH research calculator - v7.0.0",
     "MIRASH score: " + r.score.toFixed(6),
     "Sarcopenia probability: " + pct(r.sarc),
-    "No diagnostic cutoff is proposed.",
+    "Screen-positive threshold: 14.84% (displayed as approximately 15%)",
+    "Classification: " + (r.screenPositive ? "HIGH RISK / SCREEN POSITIVE" : "LOWER PREDICTED RISK"),
+    r.screenPositive ? "Action: proceed to confirmatory sarcopenia assessment." : "A negative screen does not exclude sarcopenia.",
+    "This screen-positive operating point is not a stand-alone diagnosis.",
     "Six additional muscle-health phenotypes were evaluated at the cohort level and are not reported as individual calculator predictions."
   ].join("\n");
 
